@@ -1,0 +1,52 @@
+
+Calculation of fluxes and heating rates from LBLRTM output radiances
+
+LBLRTM 
+Input file: TAPE5.sample (profile, scan parameters, etc.)
+Output files: ODdeflt_01, etc. (optical depths by layer)
+              TAPE31, TAPE32, TAPE33, TAPE61, TAPE62, TAPE63 (radiances)
+
+RADSUM 
+Input files: IN_RADSUM (control parameters)
+             TAPE31, TAPE32, TAPE33, TAPE61, TAPE62, TAPE63 (radiances)
+Output file: OUTPUT_RADSUM
+
+
+LBLRTM steps: 
+The file TAPE5.sample is a sample TAPE5 for running flux and cooling
+rate calculations with LBLRTM (see the lblrtm_instructions file
+distributed with LBLRTM for more information).  The atmosphere and
+spectral range can be changed as required.  Following the optical
+depth computations are six additional LBL runs which correspond to the
+three angles and two directions (up and down) for the calculation.
+The six output files TAPE31, TAPE32, TAPE33, TAPE61, TAPE62, and
+TAPE63 contain the binary radiance output for all layers with one file
+for each direction and angle.  For the optical depth calculation and
+the scan merges, it is recommended that the desired spectral interval
+be padded with a couple of wavenumbers at either end as shown in
+TAPE5.sample.  (Note that the downwelling scan merges can be quite
+slow for profiles with many layers).
+
+RADSUM steps:
+Radsum.f is used to read the binary output from LBLRTM to compute the
+fluxes.  Compile this with make.radsum, noting that an additional
+utility source module of the type distributed with LBLRTM
+(e.g. 'util_sgi.f') is required.  Also, radsum.f must be compiled with
+the same compiler options as used with LBLRTM (single vs. double
+precision in particular) for the input radiances to be read correctly.
+
+The init file for radsum.f, IN_RADSUM, specifies the output resolution
+(i.e. you can integrate over the whole spectral range, or write out at
+10 cm-1 intervals, for example).  The format for IN_RADSUM is outlined
+in 'radsum_instructions'.  Note that the resolution of the radiance
+output files (TAPE31, etc.) is 0.5 cm-1 since the HWHM was specified
+as 0.25 (there is no need to change this). So, your RADSUM output
+resolution always has to be a multiple of 0.5, and this ratio is
+specified in IN_RADSUM with the variable OUTINRAT.  OUTINRAT is 640 in
+the example to integrate over the whole 320 cm-1 range from 500 to 820
+cm-1.  OUTINRAT of 20 would integrate and write the fluxes at
+intervals of 10 cm-1.  NANG should always remain three, NLEV is the
+number of levels, TBND is the surface temp, and IQUAD should be set to
+zero (for the three quadrature angles defined in TAPE5.sample).
+
+
