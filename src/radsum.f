@@ -1,3 +1,9 @@
+C     path:      %P%
+C     revision:  $Revision$
+C     created:   $Date$  
+C     presently: %H%  %T%
+c______________________________________________________________________________
+
       PROGRAM RADSUM 
 C
 C******************************************************************************
@@ -69,7 +75,7 @@ C
       DOUBLE PRECISION XID,SEC,HMOLID,XALTZ,YID
       INTEGER KFILD(MXANGL),KFILU(MXANGL),LFILE, OUTINRAT
       REAL HTR,NETFLX
-      CHARACTER*8 HVRRAD
+      CHARACTER*18 HVRRSM
 C
       DIMENSION BOUND(LIMMAX)
       DIMENSION SRADD(LIMMAX,MXANGL),SRADU(LIMMAX,MXANGL)
@@ -98,7 +104,7 @@ C
 C 
 C     Assign CVS version number to module
 C
-      DATA HVRRAD / '2.0' /
+      HVRRSM = '$Revision$' 
 C
 C     Here are the weights for the first-order Gaussian quadrature:
 C
@@ -309,7 +315,7 @@ C     Compute net fluxes and heating rates, then output fluxes and
 C     heating rates from top of atmosphere down for each level.
       DO 200 K = 1, NOUT
          WRITE(LFILE,920)
-         WRITE(LFILE,930) BOUND(K), BOUND(K+1), HVRRAD
+         WRITE(LFILE,930) BOUND(K), BOUND(K+1)
          WRITE(LFILE,940) NLEV, TBND
          WRITE(LFILE,950)
          DO 200 N = NLEV,1,-1
@@ -363,8 +369,7 @@ C
  900  FORMAT(2F10.2,3I5,F8.1,I5)
  910  FORMAT(2I5)
  920  FORMAT(' ')
- 930  FORMAT('WAVENUMBER BAND: ',F8.2,' -',F8.2,' CM -1',15X,
-     *       'RADSUM CVS version ',A8)
+ 930  FORMAT('WAVENUMBER BAND: ',F8.2,' -',F8.2,' CM -1')
  940  FORMAT(' Number of levels: ',i3,4x,
      *       'Surface Temperature (K): ',f10.4)
  950  FORMAT(' LEV   PRESSURE        FLUX UP       FLUX DOWN',
