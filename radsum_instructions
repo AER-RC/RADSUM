@@ -1,14 +1,15 @@
-C     path:      %P%
-C     revision:  $Revision$
-C     created:   $Date$  
-C     presently: %H%  %T%
+C     path:      /home/rc1/aer_radsum/src/SCCS/s.radsum_instructions
+C     revision:  1.2
+C     created:   14 Apr 1995  09:48:35
+C     presently: 08 Sep 1995  11:51:43
 
 
    
    
-           INSTRUCTIONS FOR FLUX AND HEATING RATE CALCULATIONS FOR LBLRTM...
+         INSTRUCTIONS FOR FLUX AND HEATING RATE CALCULATIONS WITH LBLRTM 
 
-				     RADSUM
+				 PROGRAM: RADSUM
+                              INPUT FILE: IN_RADSUM
    
                           	  11 April 1995
    
