@@ -97,6 +97,16 @@ C     FOR THREE ANGLES  (0.91141204,0.59053314,0.21234054)
 C
       DATA GWGT1,GWGT2,GWGT3/0.20093191,0.22924111,0.06982698/
 C 
+C     FOR 3 ANGLE LACIS: SECANTS = 1.219512195,2.43902439,3.658536585
+      DATA WTLAC1,WTLAC2,WTLAC3/0.34914738,0.04243534,0.10841767/
+C
+C     HEATFAC IS THE FACTOR ONE MUST MULTIPLY DELTA-FLUX/DELTA-PRESSURE, 
+C     WITH FLUX IN W/M-2 AND PRESSURE IN MBAR, TO GET THE HEATING RATE IN
+C     UNITS OF DEGREES/DAY.  IT IS EQUAL TO 
+C           (g)x(#sec/day)x(1e-5)/(specific heat of air at const. p)
+C        =  (9.8066)(3600)(1e-5)/(1.004)
+C
+      DATA HEATFAC /8.4391/
 C******************************************************************************
 C 
       NFHDRF=NWDL(IWDF,LSTWDF)
@@ -109,9 +119,10 @@ C     INPUT WAVENUMBER VALUE OF FIRST PANEL TO BE READ IN,
 C     NUMBER OF PRESSURE LEVELS, NUMBER OF ANGLES, AND 
 C     OUTPUT FACTOR FOR DV
 C  
-      OPEN(UNIT=44,FILE='radin.dat')
-      READ(44,442) IOFF,JDEL,NANG,NLEV,TBND
- 442  FORMAT(4I5,F8.1)
+      OPEN(UNIT=44,FILE='RADINIT')
+      READ(44,442) IOFF,JDEL,NANG,NLEV,TBND,ILACIS
+ 442  FORMAT(4I5,F8.1,I5)
+      IF (ILACIS .EQ. 1) NANG = 3
 C
 C     READ IN FASCOD PRESSURE LEVELS 
 C
@@ -193,11 +204,16 @@ C
      1                         *FACDV*1.E04*2.*PI
             FLXTOTU(NLYR+1,L)  = (GWGD1*SRADU(L,1)+GWGD2*SRADU(L,2))
      1                         *FACDV*1.E04*2.*PI
-         ELSEIF (NANG.EQ.3) THEN
+         ELSEIF (NANG.EQ.3 .AND. ILACIS .EQ. 0) THEN
             FLXTOTD(NLEV-NLYR,L)=(GWGT1*SRADD(L,1)+GWGT2*SRADD(L,2)+
      +                            GWGT3*SRADD(L,3))*FACDV*1.E04*2.*PI
             FLXTOTU(NLYR+1,L)  = (GWGT1*SRADU(L,1)+GWGT2*SRADU(L,2)+
      +                            GWGT3*SRADU(L,3))*FACDV*1.E04*2.*PI
+         ELSEIF (NANG.EQ.3 .AND. ILACIS .EQ. 1) THEN
+            FLXTOTD(NLEV-NLYR,L)=(WTLAC1*SRADD(L,1)+WTLAC2*SRADD(L,2)+
+     +                            WTLAC3*SRADD(L,3))*FACDV*1.E04*2.*PI
+            FLXTOTU(NLYR+1,L)  = (WTLAC1*SRADU(L,1)+WTLAC2*SRADU(L,2)+
+     +                            WTLAC3*SRADU(L,3))*FACDV*1.E04*2.*PI
          ELSE
             STOP ' ERROR IN NANG '
          ENDIF
@@ -251,7 +267,7 @@ C
             ELSE
                HTR(N,K)=NETFLX(N,K)-NETFLX(N+1,K)
                PRETHK(N)=PRESLEV(N)-PRESLEV(N+1)
-               HTR(N,K)=2.0632*980.*HTR(N,K)/(1.E03*PRETHK(N)*0.24)
+               HTR(N,K)=HEATFAC*HTR(N,K)/PRETHK(N)
             ENDIF
 200         WRITE(LFILE,903) N-1,PRESLEV(N),FLXTOTU(N,K),
      1           FLXTOTD(N,K),NETFLX(N,K),HTR(N,K)
