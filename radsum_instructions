@@ -1,0 +1,47 @@
+C     path:      %P%
+C     revision:  $Revision$
+C     created:   $Date$  
+C     presently: %H%  %T%
+
+
+   
+
+   
+
+   
+   
+           INSTRUCTIONS FOR HEATING RATE CALCULATIONS FOR LBLRTM...     RADSUM
+   
+                               15 February 1995
+   
+   
+   
+   
+RECORD 1
+   
+   
+   
+           IOFF,   JDEL,   NANG,   NLEV,   TBND,    ILACIS
+   
+            1-5,   6-10,  11-15,  16-20,  20-28,     29-34
+   
+             I5,     I5,     I5,     I5,   F8.1,        I5
+   
+                IOFF    Output wavenumber offset from initial point V1P
+   
+                JDEL    Ratio of output spacing to input spacing
+
+                NANG    Number of angles (Maximum of 3)
+
+                NLEV    Number of levels
+                          For NLEV < 0, number of layers + 1 from input binary file header is used
+
+                TBND    Surface Temperature in K
+                          For TBND < 0, surface temperature from input binary file header is used
+
+                ILACIS  Flag for angle weights
+
+                           0  use standard weights
+                           1  use weights for Lacis angles
+    
+
