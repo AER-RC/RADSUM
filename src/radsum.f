@@ -325,8 +325,30 @@ C     heating rates from top of atmosphere down for each level.
                PRETHK(N) = PRESLV(N) - PRESLV(N+1)
                HTR(N,K) = HEATFC * HTR(N,K) / PRETHK(N)
             ENDIF
-            WRITE(LFILE,960) N-1, PRESLV(N), FLXTTU(N,K),
-     *           FLXTTD(N,K), NETFLX(N,K), HTR(N,K)
+c            WRITE(LFILE,960) N-1, PRESLV(N), FLXTTU(N,K),
+c     *           FLXTTD(N,K), NETFLX(N,K), HTR(N,K)
+            IF (PRESLV(N) .LT. 1.E-2) THEN
+               WRITE(LFILE,9952) N-1, PRESLV(N), FLXTTU(N,K), 
+     &              FLXTTD(N,K), NETFLX(N,K), HTR(N,K)
+            ELSEIF (PRESLV(N) .LT. 1.E-1) THEN
+               WRITE(LFILE,9953) N-1, PRESLV(N), FLXTTU(N,K), 
+     &              FLXTTD(N,K), NETFLX(N,K), HTR(N,K)
+            ELSEIF (PRESLV(N) .LT. 1.) THEN
+               WRITE(LFILE,9954) N-1, PRESLV(N), FLXTTU(N,K), 
+     &              FLXTTD(N,K), NETFLX(N,K), HTR(N,K)
+            ELSEIF (PRESLV(N) .LT. 10.) THEN
+               WRITE(LFILE,9955) N-1, PRESLV(N), FLXTTU(N,K), 
+     &              FLXTTD(N,K), NETFLX(N,K), HTR(N,K)
+            ELSEIF (PRESLV(N) .LT. 100.) THEN
+               WRITE(LFILE,9956) N-1, PRESLV(N), FLXTTU(N,K), 
+     &              FLXTTD(N,K), NETFLX(N,K), HTR(N,K)
+            ELSEIF (PRESLV(N) .LT. 1000.) THEN
+               WRITE(LFILE,9957) N-1, PRESLV(N), FLXTTU(N,K), 
+     &              FLXTTD(N,K), NETFLX(N,K), HTR(N,K)
+            ELSE
+               WRITE(LFILE,9958) N-1, PRESLV(N), FLXTTU(N,K), 
+     &              FLXTTD(N,K), NETFLX(N,K), HTR(N,K)
+            ENDIF
  200     CONTINUE
 C     
 C     Do a different section of the same incoming interval.
@@ -334,6 +356,13 @@ C     Do a different section of the same incoming interval.
 C
 C     Formats:
 C     
+ 9952 FORMAT(1X,I3,6X,F7.6,3X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
+ 9953 FORMAT(1X,I3,6X,F6.5,4X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
+ 9954 FORMAT(1X,I3,6X,F5.4,5X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
+ 9955 FORMAT(1X,I3,5X,F5.3,6X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
+ 9956 FORMAT(1X,I3,4X,F5.2,7X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
+ 9957 FORMAT(1X,I3,3X,F5.1,8X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
+ 9958 FORMAT(1X,I3,2X,F5.0,9X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
  900  FORMAT(2F10.2,3I5,F8.1,I5)
  910  FORMAT(2I5)
  920  FORMAT(' ')
@@ -341,11 +370,11 @@ C
      *       'RADSUM SCCS version ',A8)
  940  FORMAT(' Number of levels: ',i3,4x,
      *       'Surface Temperature (K): ',f10.4)
- 950  FORMAT(' LEV   PRESSURE       FLUX UP       FLUX DOWN',
-     *       '      NET FLUX     HEATING RATE',/,
-     *       '         MB           W/M2            W/M2  ',
-     *       '       W/M2         DEG/DAY   ')
- 960  FORMAT(1X,0P,I2,1P,4(2X,E13.6),2X,E18.11) 
+ 950  FORMAT(' LEV   PRESSURE        FLUX UP       FLUX DOWN',
+     *       '       NET FLUX      HEATING RATE',/,
+     *       '          MB             W/M2           W/M2  ',
+     *       '         W/M2          DEG/DAY   ')
+ 960  FORMAT(1X,0P,I2,1P,2X,E13.6,2X,E13.6,2X,E13.6,2X,E13.6,2X,E18.11) 
 C
  9999 STOP
 C
