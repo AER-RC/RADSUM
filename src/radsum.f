@@ -213,16 +213,14 @@ C
          IF (L.GT.KNUMW) GOTO 100
          DO 90 I = 1,NANG
 C
-            SRADD(L,I) = 0.5*RADD(J,I)
-            SRADU(L,I) = 0.5*RADU(J,I)
+            SRADD(L,I) = RADD(J,I)
+            SRADU(L,I) = RADU(J,I)
 C
             DO 80 K = J+1,J+JDEL-1
                SRADD(L,I) = SRADD(L,I)+RADD(K,I)
                SRADU(L,I) = SRADU(L,I)+RADU(K,I)
  80         CONTINUE
 C
-            SRADD(L,I) = SRADD(L,I)+0.5*RADD(J+JDEL,I)
-            SRADU(L,I) = SRADU(L,I)+0.5*RADU(J+JDEL,I)
             SRADD(L,I) = SRADD(L,I)/FLOAT(JDEL)
             SRADU(L,I) = SRADU(L,I)/FLOAT(JDEL)
   90     CONTINUE
@@ -270,18 +268,15 @@ C
 C     Calculate sfc flux from surface temperature at 0.5 wavenumber
 C     intervals and sum over DVP intervals (here, 5 cm-1) 
 C
+      DV = FACDV/FLOAT(JDEL)
       XKT = TBND/RADCN2
       DO 150 K = 1,KNUMW
          FSUM = 0.
-         RVFRC = (RNUMW(K+1)-RNUMW(K))/10.0
-         RVBAR1 = RNUMW(K)
-         DO 160 KVF = 1,10
-            RVBAR2 = RVBAR1+RVFRC
-            RVBAR = (RVBAR1+RVBAR2)/2.0
+         DO 160 KVF = 1,JDEL
+            RVBAR = RNUMW(K) + DV*FLOAT(KVF-1)
             FSUM = FSUM+BBFCN(RVBAR,XKT)*FACDV*1.E04*PI
-            RVBAR1 = RVBAR2
  160     CONTINUE
-         FLXTTU(1,K) = FSUM/10.0
+         FLXTTU(1,K) = FSUM/FLOAT(JDEL)
  150  CONTINUE
 C
 C  Compute net fluxes and heating rates, then output fluxes and heating
