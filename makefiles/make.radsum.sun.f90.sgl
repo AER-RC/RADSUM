@@ -7,18 +7,97 @@ SHELL = /bin/sh
 # Set variables
 ###############################
 
-PLATFORM = SUN
-
+PLATFORM = sun
+VERSION = v2.5
+PRECISION = sgl
 
 FC = f90
 FCFLAG = -fast
+OUTPUT = radsum_$(VERSION)_f90_$(PLATFORM)_$(PRECISION)
 
-radsum_v2.4_sun_f90_sgl     :     radsum.o util_sun.o
-	$(FC) $(FCFLAG) -o radsum_v2.4_sun_f90_sgl radsum.o util_sun.o
-#
-radsum.o: src/radsum.f
-	$(FC) $(FCFLAG) -c src/radsum.f
-#
-util_sun.o: src/util_sun.f
-	$(FC) $(FCFLAG) -c src/util_sun.f
+CPATH = src
+CDOTO = $(PLATFORM)_$(PRECISION).o
+
+CRAD = radsum
+CUTL = util_$(PLATFORM)
+
+OBJFIL = $(CRAD).o \
+         $(CUTL).o
+
+OBPATH = $(CDOTO)/$(CRAD).o \
+         $(CDOTO)/$(CUTL).o
+
+MODULE = $(CPATH)/$(CRAD).f\
+         $(CPATH)/$(CUTL).f
+
+###############################
+# Load line
+###############################
+
+$(OUTPUT) : \
+	intro makedir $(OBPATH) conclude
+	$(FC) $(FCFLAG) -o $(OUTPUT) $(OBPATH)
+
+
+###############################
+# Object compile lines
+###############################
+
+
+$(CDOTO)/$(CRAD).o : $(CPATH)/$(CRAD).f
+	$(FC) $(FCFLAG) -c $(CPATH)/$(CRAD).f
+	\mv $(CRAD).o $(CDOTO)
+
+$(CDOTO)/$(CUTL).o : $(CPATH)/$(CUTL).f
+	$(FC) $(FCFLAG) -c $(CPATH)/$(CUTL).f
+	\mv $(CUTL).o $(CDOTO)
+
+###############################
+# Create object file directory
+###############################
+
+makedir :
+	if [ ! -d $(CDOTO) ] ; \
+	then \
+	   mkdir $(CDOTO) ; \
+	fi
+
+
+###############################
+# Intro information
+###############################
+
+.SILENT:
+intro :
+	echo
+	echo '-----------------'
+	echo '  $(OUTPUT) Makefile'
+	echo '-----------------'
+	echo
+	echo 'This Makefile was designed for the $(PLATFORM) platform.'
+	echo
+	echo 'It uses the $(FC) compiler, with the following options:'
+	echo '      $(FCFLAG)'
+	echo
+	echo 'The object files used are as follows:'
+	echo
+	echo '      $(OBJ)'
+	echo
+	echo
+	echo '$(OUTPUT) make in progress ...'
+	echo
+
+
+
+###############################
+# Concluding information
+###############################
+
+conclude :
+	echo
+	echo '================='
+	echo '  Makefile done'
+	echo '================='
+
+
 
