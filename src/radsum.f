@@ -1,8 +1,3 @@
-C     path:      %P%
-C     revision:  $Revision$
-C     created:   $Date$  
-C     presently: %H%  %T%
-C------------------------------------------------------------------------------
       PROGRAM RADSUM 
 C
 C******************************************************************************
@@ -16,9 +11,11 @@ C     GENERALIZED, CORRECTED - R. D. WORSHAM   30 AUGUST 1991
 C     
 C     CORRECTED FOR THREE ANGLE SUMMATION - M. J. IACONO  6 DECEMBER 1991  
 C
-C     REMOVED NEED FOR PRESSURES IN RADINIT -  P. D. BROWN FEB 1995
+C     REMOVED NEED FOR PRESSURES IN IN_RADSUM -  P. D. BROWN FEB 1995
 C
 C     CHANGED TO V1, V2 INPUT, CLEANED, FIXED BUGS - E. J. MLAWER MARCH 1995
+C
+C     MINOR ADJUSTMENTS TO I/O AND FILENAMES - M. J. IACONO  29 SEPTEMBER 2003
 C
 C     ***REMINDER**************************************************************
 C     ** THIS CODE MUST BE COMPILED THE SAME WAY AS LBLRTM, WHETHER SINGLE OR *
@@ -36,7 +33,7 @@ C     I)   TAPE31, TAPE32, TAPE33:  LBLRTM OUTPUT FILES OF DOWNWELLING
 C            RADIANCE (ONE FILE FOR EACH ANGLE)
 C     II)  TAPE61, TAPE62, TAPE63:  LBLRTM OUTPUT FILES OF UPWELLING 
 C            RADIANCE (ONE FILE FOR EACH ANGLE)
-C     III) RADINIT -- CONTAINS:     
+C     III) IN_RADSUM -- CONTAINS:     
 C          V1:  THE BEGINNING WAVENUMBER OF THE FIRST OUTPUT FLUX GROUP
 C          V2:  THE ENDING WAVENUMBER OF THE FINAL OUTPUT FLUX GROUP
 C          OUTINRAT:  THE FACTOR BY WHICH THE INCOMING DV (DVP) SHOULD BE
@@ -56,7 +53,7 @@ C         V2, THIS RELATIONSHIP MUST HOLD:  V2 - V1 = N * OUTINRAT * DVP,
 C         WHERE N IS AN INTEGER.
 C
 C     OUTPUT:
-C     I) flxupdn.dat
+C     I) OUTPUT_RADSUM
 C        CONTAINS (AT OUTINRAT*DV WAVENUMBER INTERVALS): 
 C              - LBLRTM PRESSURE LEVELS
 C              - THE UPWARD, DOWNWARD, AND NET (UP-DOWN) FLUXES FOR ALL
@@ -99,9 +96,9 @@ C
      *            (FSCDID(15),IATM) , (FSCDID(16),LAYR1),
      *            (FSCDID(17),NLAYFS)
 C 
-C     Assign SCCS version number to module
+C     Assign CVS version number to module
 C
-      DATA HVRRAD / '$Revision$' /
+      DATA HVRRAD / '2.0' /
 C
 C     Here are the weights for the first-order Gaussian quadrature:
 C
@@ -138,7 +135,7 @@ C
       EPS = 1.E-4
 C
 C     Read input control file.
-      OPEN(UNIT=44,FILE='RADINIT')
+      OPEN(UNIT=44,FILE='IN_RADSUM')
       READ(44,900) V1, V2, OUTINRAT, NANG, NLEV, TBND, IQUAD
       IF (IQUAD .EQ. 1) NANG = 3
 C
@@ -367,7 +364,7 @@ C
  910  FORMAT(2I5)
  920  FORMAT(' ')
  930  FORMAT('WAVENUMBER BAND: ',F8.2,' -',F8.2,' CM -1',15X,
-     *       'RADSUM SCCS version ',A8)
+     *       'RADSUM CVS version ',A8)
  940  FORMAT(' Number of levels: ',i3,4x,
      *       'Surface Temperature (K): ',f10.4)
  950  FORMAT(' LEV   PRESSURE        FLUX UP       FLUX DOWN',
@@ -409,7 +406,7 @@ C
 C     
       IF (IOPT.EQ.0) THEN
          LFILE = 21
-         OPEN (LFILE,FILE='flxupdn.dat')
+         OPEN (LFILE,FILE='OUTPUT_RADSUM')
          REWIND LFILE
       ENDIF
 C
