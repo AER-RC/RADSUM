@@ -3,7 +3,15 @@ C     revision:  $Revision$
 C     created:   $Date$  
 C     presently: %H%  %T%
 c______________________________________________________________________________
-
+c
+c Copyright 2003, Atmospheric & Environmental Research, Inc. (AER).
+c This software may be used, copied, or redistributed as long as it is
+c not sold and this copyright notice is reproduced on each copy made.
+c This model is provided as is without any express or implied warranties.
+c                      (http://www.rtweb.aer.com/)
+c 
+C******************************************************************************
+C      
       PROGRAM RADSUM 
 C
 C******************************************************************************
