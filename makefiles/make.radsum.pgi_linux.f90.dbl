@@ -1,0 +1,24 @@
+# Makefile for radsum
+# $Id$
+
+SHELL = /bin/sh
+
+###############################
+# Set variables
+###############################
+
+PLATFORM = LINUX
+
+
+FC = pgf90
+FCFLAG =  -fast -r8 -i8
+
+radsum_v2.1_linux_pgi_f90_dbl     :     radsum.o util_linux_pgi.o
+	$(FC) $(FCFLAG) -o radsum_v2.1_linux_pgi_f90_dbl radsum.o util_linux_pgi.o
+#
+radsum.o: src/radsum.f
+	$(FC) $(FCFLAG) -c src/radsum.f
+#
+util_linux_pgi.o: src/util_linux_pgi.f
+	$(FC) $(FCFLAG) -c src/util_linux_pgi.f
+

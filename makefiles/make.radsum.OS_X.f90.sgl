@@ -1,0 +1,24 @@
+# Makefile for radsum
+# $Id$
+
+SHELL = /bin/sh
+
+###############################
+# Set variables
+###############################
+
+PLATFORM = OS_X (Absoft)
+
+
+FC = f90
+FCFLAG = -s -O -N11 -lU77  
+
+radsum_v2.1_OS_X_f90_sgl     :     radsum.o util_sgi.o
+	$(FC) $(FCFLAG) -o radsum_v2.1_OS_X_f90_sgl radsum.o util_sgi.o
+#
+radsum.o: src/radsum.f
+	$(FC) $(FCFLAG) -c src/radsum.f
+#
+util_sgi.o: src/util_sgi.f
+	$(FC) $(FCFLAG) -c src/util_sgi.f
+
