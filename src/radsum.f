@@ -14,7 +14,11 @@ C                                       A.E.R. INC., 26 MARCH 1990
 C
 C     GENERALIZED, CORRECTED - R. D. WORSHAM   30 AUGUST 1991
 C     
-C     CORRECTED FOR THREE ANGLE SUMMATION  - M. J. IACONO  6 DECEMBER 1991  
+C     CORRECTED FOR THREE ANGLE SUMMATION - M. J. IACONO  6 DECEMBER 1991  
+C
+C     REMOVED NEED FOR PRESSURES IN RADINIT -  P. D. BROWN FEB 1995
+C
+C     CHANGED TO V1, V2 INPUT, CLEANED, FIXED BUGS - E. J. MLAWER MARCH 1995
 C
 C     ***REMINDER**************************************************************
 C     ** THIS CODE MUST BE COMPILED THE SAME WAY AS LBLRTM, WHETHER SINGLE OR *
@@ -24,32 +28,36 @@ C
 C******************************************************************************
 C
 C     READS PANELS OF LBLRTM RADIANCE OUTPUT AT INTERVALS OF DV WAVENUMBERS,
-C     AND AVERAGES OVER GROUPS OF FACT*DV WAVENUMBERS FOR FLUX OUTPUT. 
-C     FOR EXAMPLE: THERE ARE 21 PANELS (BOXES) FOR THE WAVENUMBER RANGE
-C                  FROM 299.75 TO 310.25. (WITH DV=0.5)
-C                  THE FLUXES WOULD BE OUTPUT FOR 300-305 AND 305-310 CM-1.
-C
-C     NANG ANGLES AND FIRST MOMENT QUADRATURE ARE USED FOR THE FLUX SUMMATION. 
+C     AND SUMS OVER GROUPS OF OUTINRAT*DV WAVENUMBERS FOR FLUX OUTPUT. 
+C     NANG ANGLES AND FIRST MOMENT QUADRATURE ARE USED FOR THE FLUX SUMMATION.
 C
 C     INPUT:
-C           I) TAPE31, TAPE32, ...
-C              - LBLRTM OUTPUT FILES OF DOWNWELLING RADIANCE 
-C          II) TAPE61, TAPE62, ...
-C              - LBLRTM OUTPUT FILES OF UPWELLING RADIANCE
-C         III) RADIN.DAT
-C              CONTAINS:
-C              - THE WAVENUMBER VALUE AT THE MIDDLE OF THE FIRST PANEL TO READ,
-C              - THE WAVENUMBER OFFSET (IN DV) FOR THE DESIRED OUTPUT TO
-C                BE OFFSET FROM THE VALUE V1P (IOFF)
-C              - THE FACTOR (JDEL) BY WHICH TO MULTIPLY THE INCOMING DV TO
-C                DETERMINE THE OUTPUT DV
-C              - THE NUMBER OF ANGLES (NANG, CURRENTLY NANG<=3)
-C              - THE NUMBER OF LEVELS (NLEV, CURRENTLY NLEV<=61)
-C              - THE MODEL'S PRESSURE LEVELS (NLEV PRESSURES)
+C     I)   TAPE31, TAPE32, TAPE33:  LBLRTM OUTPUT FILES OF DOWNWELLING 
+C            RADIANCE (ONE FILE FOR EACH ANGLE)
+C     II)  TAPE61, TAPE62, TAPE63:  LBLRTM OUTPUT FILES OF UPWELLING 
+C            RADIANCE (ONE FILE FOR EACH ANGLE)
+C     III) RADINIT -- CONTAINS:     
+C          V1:  THE BEGINNING WAVENUMBER OF THE FIRST OUTPUT FLUX GROUP
+C          V2:  THE ENDING WAVENUMBER OF THE FINAL OUTPUT FLUX GROUP
+C          OUTINRAT:  THE FACTOR BY WHICH THE INCOMING DV (DVP) SHOULD BE
+C               MULTIPLIED TO GET THE WIDTH OF EACH OUTPUT GROUP
+C          NANG:  THE NUMBER OF ANGLES 
+C          NLEV:  THE NUMBER OF LEVELS 
+C          TBND:  THE SURFACE TEMPERATURE
+C          IQUAD:  FLAG FOR QUADRATURE METHOD 
+C                  = 0 FOR STANDARD FIRST-ORDER QUADRATURE
+C                  = 1 FOR SPECIAL 3 ANGLES IDENTICAL TO THOSE USED IN RRTM
+C     RESTRICTIONS ON INPUT:
+C     1.  NANG IS FORCED TO BE 3 WHEN IQUAD = 1.
+C     2.  NANG MUST BE <= 3.
+C     3.  NLEV MUST BE LESS THAN 200.
+C     4.  TO INSURE THAT AN EVEN NUMBER OF OUTPUT GROUPS FIT BETWEEN V1 AND
+C         V2, THIS RELATIONSHIP MUST HOLD:  V2 - V1 = N * OUTINRAT * DVP,
+C         WHERE N IS AN INTEGER.
 C
 C     OUTPUT:
-C           I) flxupdn.dat
-C              CONTAINS (AT FACT*DV WAVENUMBER INTERVALS): 
+C     I) flxupdn.dat
+C        CONTAINS (AT OUTINRAT*DV WAVENUMBER INTERVALS): 
 C              - LBLRTM PRESSURE LEVELS
 C              - THE UPWARD, DOWNWARD, AND NET (UP-DOWN) FLUXES FOR ALL
 C                LBLRTM LEVELS
@@ -62,11 +70,11 @@ C
       IMPLICIT DOUBLE PRECISION (V)
 C
       DOUBLE PRECISION XID,SEC,HMOLID,XALTZ,YID
-      INTEGER KFILD(MXANGL),KFILU(MXANGL),LFILE
+      INTEGER KFILD(MXANGL),KFILU(MXANGL),LFILE, OUTINRAT
       REAL HTR,NETFLX
       CHARACTER*8 HVRRAD
 C
-      DIMENSION RNUMW(LIMMAX)
+      DIMENSION BOUND(LIMMAX)
       DIMENSION SRADD(LIMMAX,MXANGL),SRADU(LIMMAX,MXANGL)
       DIMENSION FLXTTD(MXFSC,LIMMAX),FLXTTU(MXFSC,LIMMAX),PRESLV(MXFSC)
       DIMENSION HTR(MXFSC,LIMMAX),NETFLX(MXFSC,LIMMAX),PRETHK(MXFSC)
@@ -95,36 +103,29 @@ C     Assign SCCS version number to module
 C
       DATA HVRRAD / '$Revision$' /
 C
-C     This version of the code processes radiances computed for two
-C     direction cosines:  0.84494897, and 0.35505103 for K=1.
-C     The appropriate Gaussian weights (first moment quadrature)
-C     for these angles are:
+C     Here are the weights for the first-order Gaussian quadrature:
 C
-      DATA GWGD1,GWGD2/0.31804138,0.18195862/
+C     For one angle (cosine = 0.66666666667)
+      DATA GWGO1 /0.50/
 C
-C     For one angle (0.66666666667)
-C
-      DATA GWGO1/0.50/
-C
+C     For two angles (cosines are 0.84494897 and 0.35505103)
+      DATA GWGD1,GWGD2 /0.31804138,0.18195862/
+
 C     For three angles  (0.91141204,0.59053314,0.21234054)
-C
-      DATA GWGT1,GWGT2,GWGT3/0.20093191,0.22924111,0.06982698/
+      DATA GWGT1,GWGT2,GWGT3 /0.20093191,0.22924111,0.06982698/
 C 
-C     For 3 angle Lacis: secants = 1.219512195,2.43902439,3.658536585
-C
-      DATA WTLAC1,WTLAC2,WTLAC3/0.34914738,0.04243534,0.10841767/
+C     For the 3 angels when IQUAD = 1
+C     (secants = 1.219512195,2.43902439,3.658536585)
+      DATA WTQD1,WTQD2,WTQD3 /0.34914738,0.04243534,0.10841767/
 C
 C     HEATFC is the factor one must multiply DELTA-FLUX/DELTA-PRESSURE, 
 C     with flux in W/M-2 and pressure in Mb, to get the heating rate in
 C     units of Degrees/day.  It is equal to 
-C
 C           (g)x(#sec/day)x(1e-5)/(specific heat of air at const. p)
 C        =  (9.8066)(3600)(1e-5)/(1.004)
-C
       DATA HEATFC /8.4391/
 C
 C     Initialize variables
-C
       DATA PRESLV / MXFSC*0.0 /
 C
 C******************************************************************************
@@ -134,181 +135,209 @@ C
       PI = 2.*ASIN(1.)
       RADCN1 = 2.*PLANCK*CLIGHT*CLIGHT*1.E-07
       RADCN2 = PLANCK*CLIGHT/BOLTZ
+      EPS = 1.E-4
 C
-C     Input wavenumber value of first panel to be read in,
-c     number of pressure levels, number of angles, and 
-c     output factor for DV
-C  
+C     Read input control file.
       OPEN(UNIT=44,FILE='RADINIT')
-      READ(44,900) IOFF,JDEL,NANG,NLEV,TBND,ILACIS
-      IF (ILACIS .EQ. 1) NANG = 3
+      READ(44,900) V1, V2, OUTINRAT, NANG, NLEV, TBND, IQUAD
+      IF (IQUAD .EQ. 1) NANG = 3
 C
       IOPT = 0
- 5    CALL OPNFIL(KFILD,KFILU,NANG,LFILE,IOPT)
-      IF (IOPT.EQ.1) THEN
-         READ(44,910,END=9999) IOFF,JDEL
+C     Open input radiance files and output file.
+ 5    CALL OPNFIL (KFILD, KFILU, NANG, LFILE, IOPT)
+      IF (IOPT. EQ. 1) THEN
+         READ(44,900,END=9999) V1, V2, OUTINRAT
       ELSE
          IOPT = 1
       ENDIF
 C
-C     Initialize array element increment for layer boundary pressures
+C     Test for end of input marker (V1 = -1.)
+      IF (V1 .EQ. -1.) GOTO 9999
 C
-      NLYR = 1
+C     Initialize level counter.
+      ILEV = 1
 C
+C     Start loop over levels.
   10  CONTINUE
 C
+C     Read file headers.
       DO 20 I = 1,NANG
-         CALL BUFIN(KFILD(I),KEOF,FILHDR,NFHDRF)
-         CALL BUFIN(KFILU(I),KEOF,FILHDR,NFHDRF)
+         CALL BUFIN (KFILD(I), KEOF, FILHDR, NFHDRF)
+         CALL BUFIN (KFILU(I), KEOF, FILHDR, NFHDRF)
   20  CONTINUE
 C
-C     Set layer boundary pressure
+C     Set layer boundary pressure.
+      PRESLV(ILEV) = PZL
 C
-      PRESLV(NLYR) = PZL
-C
-C     Set number of levels (if NLEV < 0)
-C     and surface temperature (if TBND < 0)
-C     from highest pressure file header
-C
-      IF (NLYR.EQ.1) THEN
-         IF (NLEV.LT.0) NLEV = NLAYFS+1
-         IF (TBND.LT.0.) TBND = TZL
+C     Set number of levels (if NLEV < 0) and surface temperature      
+C     (if TBND < 0) from highest pressure file header.
+      IF (ILEV .EQ. 1) THEN
+         IF (NLEV .LT. 0) NLEV = NLAYFS+1
+         IF (TBND .LT. 0.) TBND = TZL
       ENDIF
 C 
-      IF(KEOF .LT. 0) GO TO 10 
-      IF(KEOF .EQ. 0) GO TO 1000 
+      IF (KEOF .LT. 0) GO TO 10 
+      IF (KEOF .EQ. 0) GO TO 1000 
 C
-  30  CONTINUE
+      IPANEL = 0
 C
+C     Start loop over panels.
+ 30   CONTINUE
+      IPANEL = IPANEL + 1
+C
+C     Read panel headers.
       DO 40 I = 1,NANG
          CALL BUFIN(KFILD(I),KEOF,PNLHDR,NPHDRF)
          CALL BUFIN(KFILU(I),KEOF,PNLHDR,NPHDRF)
- 40   CONTINUE
-C      
+ 40   CONTINUE      
       IF(KEOF .EQ. 0) GO TO 1000 
-      IF(KEOF .LT. 0) GO TO 999
+      IF(KEOF .LT. 0) GO TO 100
 C
+C     Read radiances from panels.
       DO 50 I = 1,NANG
          CALL BUFIN(KFILD(I),KEOF,RADD(1,I),NLIM) 
          CALL BUFIN(KFILU(I),KEOF,RADU(1,I),NLIM) 
   50  CONTINUE
 C 
-      KNUMW = (NLIM-1)/JDEL
-      FACDV = FLOAT(JDEL)*DVP
-C     
-      IF (IOFF.LT.0) THEN
-         JOFF = ABS(IOFF)
-         KNUMW = 1
-      ELSE
-         JOFF = IOFF
+      IF (IPANEL .EQ. 1) THEN
+C        Find out how many data points there are from the first point in 
+C        the first panel to the first and last ones that have to be 
+C        processed.  Also find which  panels these points are in.
+         NDVP1 = INT((V1 + EPS - (V1P - 0.5*DVP))/DVP) + 1
+         NDVP2 = INT((V2 + EPS - (V1P - 0.5*DVP))/DVP)
+         N1 = 1 + (NDVP1/NLIM)
+         N2 = 1 + (NDVP2/NLIM)
+
+         ISTART = NDVP1
+         IOUT = 1
+         ICOUNT = 0
+C
+C        Check consistency of input.  NOUT is number of output groups.
+         OUT = (V2 - V1)/(FLOAT(OUTINRAT)*DVP)
+         NOUT = INT (OUT + EPS)
+         IF (ABS(FLOAT(NOUT)-OUT) .GT. EPS) 
+     &        STOP 'V1, V2, (OUT DV)/(IN DV)  ARE INCONSISTENT'
+C
+C        Compute width of output groups and wavenumbers of boundaries 
+C        of output groups.
+         OUTDV = FLOAT(OUTINRAT) * DVP
+         DO 70 K = 1, NOUT
+            BOUND(K) = V1 + OUTDV * FLOAT(K-1)
+            DO 60 I = 1, NANG
+               SRADD(K,I) = 0.0
+               SRADU(K,I) = 0.0
+ 60         CONTINUE
+ 70      CONTINUE
+         BOUND(NOUT+1) = V2
       ENDIF
 C     
-      DO 60 K = 1,KNUMW+1
-         RNUMW(K) = V1P+FLOAT(JOFF)*DVP+FACDV*FLOAT(K-1)
- 60   CONTINUE
+C     Skip over panels that do not have needed data.
+      IF (IPANEL .LT. N1) THEN
+         ISTART = ISTART - NLIM
+         GO TO 95
+      ENDIF
+      IF (IPANEL .GT. N2) GO TO 95
 C
-      L = 0
-      DO 100 J = JOFF+1,NLIM,JDEL
-         L = L+1
-         IF (L.GT.KNUMW) GOTO 100
-         DO 90 I = 1,NANG
-C
-            SRADD(L,I) = RADD(J,I)
-            SRADU(L,I) = RADU(J,I)
-C
-            DO 80 K = J+1,J+JDEL-1
-               SRADD(L,I) = SRADD(L,I)+RADD(K,I)
-               SRADU(L,I) = SRADU(L,I)+RADU(K,I)
- 80         CONTINUE
-C
-            SRADD(L,I) = SRADD(L,I)/FLOAT(JDEL)
-            SRADU(L,I) = SRADU(L,I)/FLOAT(JDEL)
-  90     CONTINUE
-C
-         IF (NANG.EQ.1) THEN
-            FLXTTD(NLEV-NLYR,L) = GWGO1*SRADD(L,1)*FACDV*1.E04*2.*PI
-            FLXTTU(NLYR+1,L)    = GWGO1*SRADU(L,1)*FACDV*1.E04*2.*PI
-         ELSEIF (NANG.EQ.2) THEN
-            FLXTTD(NLEV-NLYR,L) = (GWGD1*SRADD(L,1)+GWGD2*SRADD(L,2))
-     *                            *FACDV*1.E04*2.*PI
-            FLXTTU(NLYR+1,L)    = (GWGD1*SRADU(L,1)+GWGD2*SRADU(L,2))
-     *                            *FACDV*1.E04*2.*PI
-         ELSEIF (NANG.EQ.3 .AND. ILACIS .EQ. 0) THEN
-            FLXTTD(NLEV-NLYR,L) = (GWGT1*SRADD(L,1)+GWGT2*SRADD(L,2)
-     *                            +GWGT3*SRADD(L,3))*FACDV*1.E04*2.*PI
-            FLXTTU(NLYR+1,L)    = (GWGT1*SRADU(L,1)+GWGT2*SRADU(L,2)
-     *                            +GWGT3*SRADU(L,3))*FACDV*1.E04*2.*PI
-         ELSEIF (NANG.EQ.3 .AND. ILACIS .EQ. 1) THEN
-            FLXTTD(NLEV-NLYR,L) = (WTLAC1*SRADD(L,1)+WTLAC2*SRADD(L,2)
-     *                            +WTLAC3*SRADD(L,3))*FACDV*1.E04*2.*PI
-            FLXTTU(NLYR+1,L)    = (WTLAC1*SRADU(L,1)+WTLAC2*SRADU(L,2)
-     *                            +WTLAC3*SRADU(L,3))*FACDV*1.E04*2.*PI
+C     Keep a running total of radiances in each desired output group.
+      DO 90 K = ISTART, NLIM
+         DO 80 I = 1, NANG
+            SRADD(IOUT,I) = SRADD(IOUT,I) + RADD(K,I)
+            SRADU(IOUT,I) = SRADU(IOUT,I) + RADU(K,I)
+ 80      CONTINUE
+
+         ICOUNT = ICOUNT + 1
+         IF (ICOUNT .GE. OUTINRAT) THEN
+C           Current ouput group is complete.
+            ICOUNT = 0
+            IOUT = IOUT + 1
+            IF (IOUT .GT. NOUT) GO TO 95
+         ENDIF
+ 90   CONTINUE
+
+ 95   CONTINUE
+C     Current panel is complete.
+      ISTART = 1
+      GO TO 30
+
+ 100  CONTINUE
+C     All needed radiances have been summed for this level.  Time to
+C     calculate fluxes.  The variable DV is the same as DVP above.
+      DV = OUTDV/FLOAT(OUTINRAT)
+      FACTOR = DV * 1.E04 * 2. * PI
+      NDL = NLEV - ILEV
+      DO 110 L = 1, NOUT
+         IF (IQUAD .EQ. 1) THEN
+            FLXTTD(NDL,L) = (WTQD1 * SRADD(L,1) + WTQD2 * SRADD(L,2)
+     *                            + WTQD3 * SRADD(L,3)) * FACTOR
+            FLXTTU(ILEV+1,L) = (WTQD1 * SRADU(L,1) + WTQD2 * SRADU(L,2)
+     *                            + WTQD3 * SRADU(L,3)) * FACTOR
+         ELSEIF (NANG .EQ. 1) THEN
+            FLXTTD(NDL,L) = GWGO1 * SRADD(L,1) * FACTOR
+            FLXTTU(ILEV+1,L) = GWGO1 * SRADU(L,1) * FACTOR
+         ELSEIF (NANG .EQ. 2) THEN
+            FLXTTD(NDL,L) = (GWGD1 * SRADD(L,1) + GWGD2 * SRADD(L,2))
+     *                            * FACTOR
+            FLXTTU(ILEV+1,L) = (GWGD1 * SRADU(L,1) + GWGD2 * SRADU(L,2))
+     *                            * FACTOR
+         ELSEIF (NANG .EQ. 3) THEN
+            FLXTTD(NDL,L) = (GWGT1 * SRADD(L,1) + GWGT2 * SRADD(L,2)
+     *                            + GWGT3 * SRADD(L,3)) * FACTOR
+            FLXTTU(ILEV+1,L) = (GWGT1 * SRADU(L,1)+ GWGT2 * SRADU(L,2)
+     *                            + GWGT3 *SRADU(L,3)) * FACTOR
          ELSE
             STOP ' ERROR IN NANG '
          ENDIF
+ 110  CONTINUE
 C
- 100  CONTINUE
-C
-      GOTO 30
-C 
-999   CONTINUE
-C
+ 999  CONTINUE
 C     Return and do next level
-C
-      NLYR = NLYR+1
+      ILEV = ILEV + 1
       GO TO 10
 C
  1000 CONTINUE
-C
-C     Apply correction to upward sfc flux (by extrapolation)
-C
-C      DO 150 K = 1,KNUMW
-C   150 FLXTTU(1,K) = 3*(FLXTTU(2,K)-FLXTTU(3,K))+FLXTTU(4,K)
-C     
-C     Calculate sfc flux from surface temperature at 0.5 wavenumber
-C     intervals and sum over DVP intervals (here, 5 cm-1) 
-C
-      DV = FACDV/FLOAT(JDEL)
+C     All incoming data have been processed.  For each output group,
+C     calculate surface flux (using surface temperature) by summing
+C     the Planck function computed at intervals of DV wavenumbers.
       XKT = TBND/RADCN2
-      DO 150 K = 1,KNUMW
+      DO 150 IOUT = 1, NOUT
          FSUM = 0.
-         DO 160 KVF = 1,JDEL
-            RVBAR = RNUMW(K) + DV*FLOAT(KVF-1)
-            FSUM = FSUM+BBFCN(RVBAR,XKT)*FACDV*1.E04*PI
+         DO 160 K = 1, OUTINRAT
+            RVBAR = BOUND(IOUT) + DV * (FLOAT(K-1) + 0.5)
+            FSUM = FSUM + BBFCN(RVBAR,XKT) * DV * 1.E04 * PI
  160     CONTINUE
-         FLXTTU(1,K) = FSUM/FLOAT(JDEL)
+         FLXTTU(1,IOUT) = FSUM
  150  CONTINUE
 C
-C  Compute net fluxes and heating rates, then output fluxes and heating
-C  rates from top of atmosphere down for each level:
-C
-      DO 200 K = 1,KNUMW
+C     Compute net fluxes and heating rates, then output fluxes and 
+C     heating rates from top of atmosphere down for each level.
+      DO 200 K = 1, NOUT
          WRITE(LFILE,920)
-         WRITE(LFILE,930) RNUMW(K)-0.25,RNUMW(K+1)-0.25,HVRRAD
-         WRITE(LFILE,940) NLEV,TBND
+         WRITE(LFILE,930) BOUND(K), BOUND(K+1), HVRRAD
+         WRITE(LFILE,940) NLEV, TBND
          WRITE(LFILE,950)
          DO 200 N = NLEV,1,-1
-            NETFLX(N,K) = FLXTTU(N,K)-FLXTTD(N,K)
+            NETFLX(N,K) = FLXTTU(N,K) - FLXTTD(N,K)
             IF (N.EQ.NLEV) THEN
                HTR(N,K) = 0.
                PRESLV(N) = PZU
             ELSE
-               HTR(N,K) = NETFLX(N,K)-NETFLX(N+1,K)
-               PRETHK(N) = PRESLV(N)-PRESLV(N+1)
-               HTR(N,K) = HEATFC*HTR(N,K)/PRETHK(N)
+               HTR(N,K) = NETFLX(N,K) - NETFLX(N+1,K)
+               PRETHK(N) = PRESLV(N) - PRESLV(N+1)
+               HTR(N,K) = HEATFC * HTR(N,K) / PRETHK(N)
             ENDIF
-            WRITE(LFILE,960) N-1,PRESLV(N),FLXTTU(N,K),
-     *           FLXTTD(N,K),NETFLX(N,K),HTR(N,K)
+            WRITE(LFILE,960) N-1, PRESLV(N), FLXTTU(N,K),
+     *           FLXTTD(N,K), NETFLX(N,K), HTR(N,K)
  200     CONTINUE
 C     
+C     Do a different section of the same incoming interval.
       GOTO 5
 C
 C     Formats:
 C     
- 900  FORMAT(4I5,F8.1,I5)
+ 900  FORMAT(2F10.2,3I5,F8.1,I5)
  910  FORMAT(2I5)
- 920  FORMAT('1')
- 930  FORMAT('WAVENUMBER BAND: ',F8.2,'-',F8.2,' CM -1',15X,
+ 920  FORMAT(' ')
+ 930  FORMAT('WAVENUMBER BAND: ',F8.2,' -',F8.2,' CM -1',15X,
      *       'RADSUM SCCS version ',A8)
  940  FORMAT(' Number of levels: ',i3,4x,
      *       'Surface Temperature (K): ',f10.4)
