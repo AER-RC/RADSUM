@@ -140,13 +140,13 @@ c     number of pressure levels, number of angles, and
 c     output factor for DV
 C  
       OPEN(UNIT=44,FILE='RADINIT')
-      READ(44,442) IOFF,JDEL,NANG,NLEV,TBND,ILACIS
+      READ(44,900) IOFF,JDEL,NANG,NLEV,TBND,ILACIS
       IF (ILACIS .EQ. 1) NANG = 3
 C
       IOPT = 0
  5    CALL OPNFIL(KFILD,KFILU,NANG,LFILE,IOPT)
       IF (IOPT.EQ.1) THEN
-         READ(44,444,END=9999) IOFF,JDEL
+         READ(44,910,END=9999) IOFF,JDEL
       ELSE
          IOPT = 1
       ENDIF
@@ -161,7 +161,19 @@ C
          CALL BUFIN(KFILD(I),KEOF,FILHDR,NFHDRF)
          CALL BUFIN(KFILU(I),KEOF,FILHDR,NFHDRF)
   20  CONTINUE
+C
+C     Set layer boundary pressure
+C
       PRESLV(NLYR) = PZL
+C
+C     Set number of levels (if NLEV < 0)
+C     and surface temperature (if TBND < 0)
+C     from highest pressure file header
+C
+      IF (NLYR.EQ.1) THEN
+         IF (NLEV.LT.0) NLEV = NLAYFS+1
+         IF (TBND.LT.0.) TBND = TZL
+      ENDIF
 C 
       IF(KEOF .LT. 0) GO TO 10 
       IF(KEOF .EQ. 0) GO TO 1000 
@@ -276,9 +288,10 @@ C  Compute net fluxes and heating rates, then output fluxes and heating
 C  rates from top of atmosphere down for each level:
 C
       DO 200 K = 1,KNUMW
-         WRITE(LFILE,900)
-         WRITE(LFILE,901) RNUMW(K)-0.25,RNUMW(K+1)-0.25,HVRRAD
-         WRITE(LFILE,902)
+         WRITE(LFILE,920)
+         WRITE(LFILE,930) RNUMW(K)-0.25,RNUMW(K+1)-0.25,HVRRAD
+         WRITE(LFILE,940) NLEV,TBND
+         WRITE(LFILE,950)
          DO 200 N = NLEV,1,-1
             NETFLX(N,K) = FLXTTU(N,K)-FLXTTD(N,K)
             IF (N.EQ.NLEV) THEN
@@ -289,7 +302,7 @@ C
                PRETHK(N) = PRESLV(N)-PRESLV(N+1)
                HTR(N,K) = HEATFC*HTR(N,K)/PRETHK(N)
             ENDIF
-            WRITE(LFILE,903) N-1,PRESLV(N),FLXTTU(N,K),
+            WRITE(LFILE,960) N-1,PRESLV(N),FLXTTU(N,K),
      *           FLXTTD(N,K),NETFLX(N,K),HTR(N,K)
  200     CONTINUE
 C     
@@ -297,16 +310,18 @@ C
 C
 C     Formats:
 C     
- 442  FORMAT(4I5,F8.1,I5)
- 444  FORMAT(2I5)
- 900  FORMAT('1')
- 901  FORMAT('WAVENUMBER BAND: ',F8.2,'-',F8.2,' CM -1',15X,
+ 900  FORMAT(4I5,F8.1,I5)
+ 910  FORMAT(2I5)
+ 920  FORMAT('1')
+ 930  FORMAT('WAVENUMBER BAND: ',F8.2,'-',F8.2,' CM -1',15X,
      *       'RADSUM SCCS version ',A8)
- 902  FORMAT(' LEV   PRESSURE       FLUX UP       FLUX DOWN',
+ 940  FORMAT(' Number of levels: ',i3,4x,
+     *       'Surface Temperature (K): ',f10.4)
+ 950  FORMAT(' LEV   PRESSURE       FLUX UP       FLUX DOWN',
      *       '      NET FLUX     HEATING RATE',/,
      *       '         MB           W/M2            W/M2  ',
      *       '       W/M2         DEG/DAY   ')
- 903  FORMAT(1X,0P,I2,1P,4(2X,E13.6),2X,E18.11) 
+ 960  FORMAT(1X,0P,I2,1P,4(2X,E13.6),2X,E18.11) 
 C
  9999 STOP
 C
