@@ -76,11 +76,14 @@ C              - THE HEATING RATE FOR EACH LAYER, COMPUTED FROM NET FLUX,
 C                INDEXED AND WRITTEN WITH THE BOTTOM LEVEL OF THE LAYER
 C******************************************************************************
 C 
-      PARAMETER (MXFSC=200,LIMMAX=2500,MXANGL=3)
+      PARAMETER (MXFSC=500,LIMMAX=2500,MXANGL=3)
+C                                                                         A02920
+      IMPLICIT REAL*8           (V)                                     ! A02930
 C
-      IMPLICIT DOUBLE PRECISION (V)
+      CHARACTER*8 XID, HMOLID, YID,HDATE,HTIME         
+      REAL*8 SEC, XALTZ 
+c
 C
-      DOUBLE PRECISION XID,SEC,HMOLID,XALTZ,YID
       INTEGER KFILD(MXANGL),KFILU(MXANGL),LFILE, OUTINRAT
       REAL HTR,NETFLX
       CHARACTER*18 HVRRSM
@@ -95,6 +98,7 @@ C
       COMMON /FILHDR/ XID(10),SEC,P0,T0,HMOLID(60),XALTZ(4),WK(60),
      *                PZL,PZU,TZL,TZU,WBROAD,DVT,V1V,V2V,TBOUND,
      *                EMISIV,FSCDID(17),NMOL,LAYRS,YID1,YID(10),LSTWDF
+
       COMMON /PNLHDR/ V1P,V2P,DVP,NLIM,LSTWDP 
       COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2
 C
@@ -397,7 +401,8 @@ C
 C******************************************************************************
 C     THIS SUBROUTINE OPENS THE NEEDED FILES. 
 C 
-      INTEGER KFILD(NANG), KFILU(NANG), LFILE
+      PARAMETER (MXANGL=3)
+      INTEGER KFILD(MXANGL), KFILU(MXANGL), LFILE
       CHARACTER TAPE*4,KFIL*6,CFORM*11
 C
       DATA CFORM/'UNFORMATTED'/
