@@ -13,8 +13,8 @@ PLATFORM = LINUX
 FC = pgf90
 FCFLAG =  -fast 
 
-radsum_v2.3_linux_pgi_f90_sgl     :     radsum.o util_linux_pgi.o
-	$(FC) $(FCFLAG) -o radsum_v2.3_linux_pgi_f90_sgl radsum.o util_linux_pgi.o
+radsum_v2.4_linux_pgi_f90_sgl     :     radsum.o util_linux_pgi.o
+	$(FC) $(FCFLAG) -o radsum_v2.4_linux_pgi_f90_sgl radsum.o util_linux_pgi.o
 #
 radsum.o: src/radsum.f
 	$(FC) $(FCFLAG) -c src/radsum.f

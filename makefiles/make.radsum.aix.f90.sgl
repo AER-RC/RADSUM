@@ -13,8 +13,8 @@ PLATFORM = AIX
 FC = xlf90
 FCFLAG =   -O2 -qfixed=72 -qmaxmem=-1 
 
-radsum_v2.3_aix_f90_sgl     :     radsum.o util_aix.o
-	$(FC) $(FCFLAG) -o radsum_v2.3_aix_f90_sgl radsum.o util_aix.o
+radsum_v2.4_aix_f90_sgl     :     radsum.o util_aix.o
+	$(FC) $(FCFLAG) -o radsum_v2.4_aix_f90_sgl radsum.o util_aix.o
 #
 radsum.o: src/radsum.f
 	$(FC) $(FCFLAG) -c src/radsum.f

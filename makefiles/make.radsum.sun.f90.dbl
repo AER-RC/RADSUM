@@ -13,8 +13,8 @@ PLATFORM = SUN
 FC = f90
 FCFLAG = -fast -xtypemap=real:64,double:64,integer:64
 
-radsum_v2.3_sun_f90_dbl     :     radsum.o util_sun.o
-	$(FC) $(FCFLAG) -o radsum_v2.3_sun_f90_dbl radsum.o util_sun.o
+radsum_v2.4_sun_f90_dbl     :     radsum.o util_sun.o
+	$(FC) $(FCFLAG) -o radsum_v2.4_sun_f90_dbl radsum.o util_sun.o
 #
 radsum.o: src/radsum.f
 	$(FC) $(FCFLAG) -c src/radsum.f
