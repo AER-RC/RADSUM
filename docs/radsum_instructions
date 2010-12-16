@@ -1,0 +1,54 @@
+$Author$
+$Revision$
+$Date$
+   
+         INSTRUCTIONS FOR FLUX AND HEATING RATE CALCULATIONS WITH LBLRTM 
+
+				 PROGRAM: RADSUM
+                              INPUT FILE: IN_RADSUM
+   
+RECORD 1
+      
+          V1,   V2,    OUTINRAT,   NANG,   NLEV,   TBND,   IQUAD
+   
+         1-10  11-20    21-25      26-30   31-35   36-43   44-48
+   
+        F10.2  F10.2      I5        I5      I5      F8.1     I5
+   
+	V1		The beginning wavenumber of the first output group
+
+	V2		The ending wavenumber of the final output group
+
+	OUTINRAT	The ratio of the DV of each output group to the
+			incoming DV
+	
+        NANG 		Number of angles (Maximum of 3)
+
+        NLEV    	Number of levels
+                          	For NLEV < 0, number of layers + 1 from 
+				input binary file header is used
+
+        TBND    	Surface Temperature in K
+                          	For TBND < 0, surface temperature from 
+				input binary file header is used
+
+        IQUAD  		Flag for quadrature method
+                           	0 - standard first-order quadrature
+                           	1 - quadrature weights associated with
+					three angles used in RRTM
+
+	Restrictions:  	V2 - V1 divided by OUTINRAT * (incoming DV) must be
+			an integer (equals the number of output groups).
+
+RECORD 2 
+      
+          V1,   V2,    OUTINRAT   
+   
+         1-10  11-20    21-25      
+   
+        F10.2  F10.2      I5       
+
+	Same descriptions and restrictions apply as above. There should be
+	one of these records for each additional desired set of output groups.
+
+	NOTE:  V1 = -1. indicates the end of input.
