@@ -1,0 +1,74 @@
+$Author$
+$Revision$
+$Date$
+
+NOTE:
+** CVS rtags can't accept "." in strings, substitute "_"
+
+January 2011
+
+	Release_2_6
+
+	* Updated directory structure to be consistent with LBRLTM structure
+	* Updated makefile system to be consistent with LBLRTM makefiles
+	
+May 28, 2004
+
+	Release_2_5
+	
+	* Updated makefiles to be consistent with LBLRTM makefiles
+		- The OS X and AIX makefiles have not been updated for
+		this release.  Should generate makefiles and test on platforms
+		before release.
+
+	* Removed -fast option from SUN and LINUX makefiles
+		- Code would not run on LINUX machine in double precision with
+		the -fast option.  
+	
+	* Changed several variable declarations to be consistent
+	with global double precision compile and increase the maximum number of
+	allowable levels in radsum.f. 
+
+	* Added README.release_notes to the archive
+
+	* Using Utilites Release 7.2
+
+October 27, 2003
+
+	Release_2_4 - Updated release numbers in makefiles.
+		No reference
+
+		This version was made publicly available as a
+                tar file on the AER RT web site.
+
+	Release_2_3 - Added AER copyright statement to radsum.f.
+		No reference
+
+
+October 23, 2003
+
+	Release_2_2 - Generic makefile was replaced with machine
+                specific makefiles and full set of utility files
+                were added.
+		No reference
+
+October 2, 2003:
+
+	RADSUM is now being officially archived in CVS.  Earlier
+	versions of the code that were previously archived in SCCS
+	are included in the CVS archive. Only one release of the
+	earlier code was made to Bob Ellingson (date unknown).
+
+	Release_2_0 - Initial release version - input and output
+                      filenames were standardized.
+		No reference
+
+		This version was not distributed.
+
+	Release_2_1 - Version header added to main module. 
+		No reference
+
+		This version was distributed to Cathy Clerbaux.
+
+	
+
