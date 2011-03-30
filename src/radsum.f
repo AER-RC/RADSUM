@@ -2,16 +2,25 @@ C     path:      %P%
 C     revision:  $Revision$
 C     created:   $Date$  
 C     presently: %H%  %T%
-c______________________________________________________________________________
-c
-c Copyright 2003, Atmospheric & Environmental Research, Inc. (AER).
-c This software may be used, copied, or redistributed as long as it is
-c not sold and this copyright notice is reproduced on each copy made.
-c This model is provided as is without any express or implied warranties.
-c                      (http://www.rtweb.aer.com/)
-c 
-C******************************************************************************
-C      
+C
+C  --------------------------------------------------------------------------
+C |  Copyright ©, Atmospheric and Environmental Research, Inc., 2011         |
+C |                                                                          |
+C |  All rights reserved. This source code is part of the RADSUM software    |
+C |  and is designed for scientific and research purposes. Atmospheric and   |
+C |  Environmental Research, Inc. (AER) grants USER the right to download,   |
+C |  install, use and copy this software for scientific and research         |
+C |  purposes only. This software may be redistributed as long as this       |
+C |  copyright notice is reproduced on any copy made and appropriate         |
+C |  acknowledgment is given to AER. This software or any modified version   |
+C |  of this software may not be incorporated into proprietary software or   |
+C |  commercial software offered for sale.                                   |
+C |                                                                          |
+C |  This software is provided as is without any express or implied          |
+C |  warranties.                                                             |
+C |                       (http://www.rtweb.aer.com/)                        |
+C  --------------------------------------------------------------------------
+C
       PROGRAM RADSUM 
 C
 C******************************************************************************
@@ -230,8 +239,15 @@ C
 C        Check consistency of input.  NOUT is number of output groups.
          OUT = (V2 - V1)/(FLOAT(OUTINRAT)*DVP)
          NOUT = INT (OUT + EPS)
-         IF (ABS(FLOAT(NOUT)-OUT) .GT. EPS) 
-     &        STOP 'V1, V2, (OUT DV)/(IN DV)  ARE INCONSISTENT'
+
+         IF (ABS(FLOAT(NOUT)-OUT) .GT. EPS) THEN
+             write(*,*) 'V1 = ', V1
+    	     write(*,*) 'V2 = ', V2
+             write(*,*) 'OUTINRAT = ', OUTINRAT
+             write(*,*) 'DVP = ', DVP
+             STOP 'V1, V2, (OUT DV)/(IN DV)  ARE INCONSISTENT'
+	ENDIF
+
 C
 C        Compute width of output groups and wavenumbers of boundaries 
 C        of output groups.
