@@ -9,8 +9,9 @@ January 2011
 
 	Release_2_6
 
-	* Updated directory structure to be consistent with LBRLTM structure
-	* Updated makefile system to be consistent with LBLRTM makefiles
+	* Modified directory structure for source codes, makefiles, and documentation.
+
+	* Added makefile system to compile radsum.  Includes new platforms such as Windows and capability to easily add new platforms.
 	
 May 28, 2004
 
