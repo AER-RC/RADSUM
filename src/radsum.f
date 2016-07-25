@@ -71,6 +71,7 @@ C
 C
       DOUBLE PRECISION XID,SEC,HMOLID,XALTZ,YID
       INTEGER KFILD(MXANGL),KFILU(MXANGL),LFILE, OUTINRAT
+      INTEGER JFILE
       REAL HTR,NETFLX
       CHARACTER*8 HVRRAD
 C
@@ -149,7 +150,7 @@ c     flexible
 C
       IOPT = 0
 C     Open input radiance files and output file.
- 5    CALL OPNFIL (KFILD, KFILU, NANG, LFILE, IOPT)
+ 5    CALL OPNFIL (KFILD, KFILU, NANG, LFILE, JFILE, IOPT)
       IF (IOPT. EQ. 1) THEN
          READ(44,900,END=9999) V1, V2, OUTINRAT
       ELSE
@@ -272,6 +273,7 @@ C     calculate fluxes.  The variable DV is the same as DVP above.
       DV = OUTDV/FLOAT(OUTINRAT)
       FACTOR = DV * 1.E04 * 2. * PI
       NDL = NLEV - ILEV
+      
       DO 110 L = 1, NOUT
          IF (IQUAD .EQ. 1) THEN
             FLXTTD(NDL,L) = (WTQD1 * SRADD(L,1) + WTQD2 * SRADD(L,2)
@@ -317,6 +319,12 @@ C     the Planck function computed at intervals of DV wavenumbers.
 C
 C     Compute net fluxes and heating rates, then output fluxes and 
 C     heating rates from top of atmosphere down for each level.
+      WRITE(JFILE) NOUT
+      WRITE(JFILE) NLEV
+      WRITE(JFILE) NANG
+      WRITE(JFILE) TBND
+      WRITE(JFILE) V1, V2
+
       DO 200 K = 1, NOUT
          WRITE(LFILE,920)
          WRITE(LFILE,930) BOUND(K), BOUND(K+1), HVRRAD
@@ -357,6 +365,11 @@ c     *           FLXTTD(N,K), NETFLX(N,K), HTR(N,K)
      &              FLXTTD(N,K), NETFLX(N,K), HTR(N,K)
             ENDIF
  200     CONTINUE
+      WRITE(JFILE) PRESLV(1:NLEV)
+      WRITE(JFILE) FLXTTU(1:NLEV,1)
+      WRITE(JFILE) FLXTTD(1:NLEV,1)
+      WRITE(JFILE) NETFLX(1:NLEV,1)
+      WRITE(JFILE) HTR(1:NLEV,1)
 C     
 C     Do a different section of the same incoming interval.
       GOTO 5
@@ -399,12 +412,12 @@ C
 C
 C------------------------------------------------------------------------------
 C
-      SUBROUTINE OPNFIL(KFILD,KFILU,NANG,LFILE,IOPT)
+      SUBROUTINE OPNFIL(KFILD,KFILU,NANG,LFILE,JFILE,IOPT)
 C 
 C******************************************************************************
 C     THIS SUBROUTINE OPENS THE NEEDED FILES. 
 C 
-      INTEGER KFILD(NANG), KFILU(NANG), LFILE
+      INTEGER KFILD(NANG), KFILU(NANG), LFILE, JFILE
       CHARACTER TAPE*4,KFIL*6,CFORM*11
 C
       DATA CFORM/'UNFORMATTED'/
@@ -428,6 +441,10 @@ C
          LFILE = 21
          OPEN (LFILE,FILE='flxupdn.dat')
          REWIND LFILE
+
+         JFILE = 22
+         OPEN (JFILE,FORM='UNFORMATTED',FILE='flxupdn.bin')
+         REWIND JFILE
       ENDIF
 C
       RETURN
