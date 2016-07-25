@@ -1,0 +1,24 @@
+# Makefile for radsum
+# $Id: make.radsum.sun.f90.dbl 11271 2003-10-23 20:11:22Z mike $
+
+SHELL = /bin/sh
+
+###############################
+# Set variables
+###############################
+
+PLATFORM = SUN
+
+
+FC = f90
+FCFLAG = -fast -xtypemap=real:64,double:64,integer:64
+
+radsum_v2.1_sun_f90_dbl     :     radsum.o util_sun.o
+	$(FC) $(FCFLAG) -o radsum_v2.1_sun_f90_dbl radsum.o util_sun.o
+#
+radsum.o: src/radsum.f
+	$(FC) $(FCFLAG) -c src/radsum.f
+#
+util_sun.o: src/util_sun.f
+	$(FC) $(FCFLAG) -c src/util_sun.f
+

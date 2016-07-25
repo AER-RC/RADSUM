@@ -1,0 +1,24 @@
+# Makefile for radsum
+# $Id: make.radsum.aix.f90.dbl 11271 2003-10-23 20:11:22Z mike $
+
+SHELL = /bin/sh
+
+###############################
+# Set variables
+###############################
+
+PLATFORM = AIX
+
+
+FC = xlf90
+FCFLAG = -O2 -qfixed=72 -qmaxmem=-1 -qrealsize=8 -qintsize=8
+
+radsum_v2.1_aix_f90_dbl     :     radsum.o util_aix.o
+	$(FC) $(FCFLAG) -o radsum_v2.1_aix_f90_dbl radsum.o util_aix.o
+#
+radsum.o: src/radsum.f
+	$(FC) $(FCFLAG) -c src/radsum.f
+#
+util_aix.o: src/util_aix.f
+	$(FC) $(FCFLAG) -c src/util_aix.f
+

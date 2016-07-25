@@ -1,0 +1,24 @@
+# Makefile for radsum
+# $Id: make.radsum.sgi.f90.sgl 11271 2003-10-23 20:11:22Z mike $
+
+SHELL = /bin/sh
+
+###############################
+# Set variables
+###############################
+
+PLATFORM = SGI
+
+
+FC = f90
+FCFLAG = -mips4 -r10000 -lfastm -O3 -TENV:X=0
+
+radsum_v2.1_sgi_f90_sgl     :     radsum.o util_sgi.o
+	$(FC) $(FCFLAG) -o radsum_v2.1_sgi_f90_sgl radsum.o util_sgi.o
+#
+radsum.o: src/radsum.f
+	$(FC) $(FCFLAG) -c src/radsum.f
+#
+util_sgi.o: src/util_sgi.f
+	$(FC) $(FCFLAG) -c src/util_sgi.f
+
