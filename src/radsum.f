@@ -38,7 +38,9 @@ C     REMOVED NEED FOR PRESSURES IN IN_RADSUM -  P. D. BROWN FEB 1995
 C
 C     CHANGED TO V1, V2 INPUT, CLEANED, FIXED BUGS - E. J. MLAWER MARCH 1995
 C
-C     MINOR ADJUSTMENTS TO I/O AND FILENAMES - M. J. IACONO  29 SEPTEMBER 2003
+C     MINOR ADJUSTMENTS TO I/O AND FILENAMES - M. J. IACONO 29 SEPTEMBER 2003
+C
+C     ADDED SURFACE EMISSIVITY, FIXED MULTI-PANEL BUG - E. J. MLAWER MARCH 2017
 C
 C     ***REMINDER**************************************************************
 C     ** THIS CODE MUST BE COMPILED THE SAME WAY AS LBLRTM, WHETHER SINGLE OR *
@@ -102,6 +104,7 @@ C
       DIMENSION FLXTTD(MXFSC,LIMMAX),FLXTTU(MXFSC,LIMMAX),PRESLV(MXFSC)
       DIMENSION HTR(MXFSC,LIMMAX),NETFLX(MXFSC,LIMMAX),PRETHK(MXFSC)
       DIMENSION FILHDR(2),PNLHDR(2),IWDF(2),IWDP(2)
+      dimension sremis(3),emis_orig(4040),dfluxdv(limmax,limmax)
 C
       COMMON /MANE/ RADD(LIMMAX,MXANGL),RADU(LIMMAX,MXANGL)
       COMMON /FILHDR/ XID(10),SEC,P0,T0,HMOLID(60),XALTZ(4),WK(60),
@@ -138,7 +141,7 @@ C     For two angles (cosines are 0.84494897 and 0.35505103)
 C     For three angles  (0.91141204,0.59053314,0.21234054)
       DATA GWGT1,GWGT2,GWGT3 /0.20093191,0.22924111,0.06982698/
 C 
-C     For the 3 angels when IQUAD = 1
+C     For the 3 angles when IQUAD = 1
 C     (secants = 1.219512195,2.43902439,3.658536585)
       DATA WTQD1,WTQD2,WTQD3 /0.34914738,0.04243534,0.10841767/
 C
@@ -163,8 +166,17 @@ C
 C
 C     Read input control file.
       OPEN(UNIT=44,FILE='IN_RADSUM')
-      READ(44,900) V1, V2, OUTINRAT, NANG, NLEV, TBND, IQUAD
+      READ(44,900) V1, V2, OUTINRAT, NANG, NLEV, TBND, IQUAD, iemis, 
+     *                 sremis
+      !print *, sremis
       IF (IQUAD .EQ. 1) NANG = 3
+      if (iemis .eq. 3) then
+          open (unit=45, file='EMISSIVITY')
+          read(45,905)v1em,v2em,dvem,nlimem
+          do 4 iem = 1, nlimem
+              read(45,906)emis_orig(iem)
+  4       continue
+      endif
 C
       IOPT = 0
 C     Open input radiance files and output file.
@@ -231,7 +243,6 @@ C        processed.  Also find which  panels these points are in.
          NDVP2 = INT((V2 + EPS - (V1P - 0.5*DVP))/DVP)
          N1 = 1 + (NDVP1/NLIM)
          N2 = 1 + (NDVP2/NLIM)
-
          ISTART = NDVP1
          IOUT = 1
          ICOUNT = 0
@@ -269,16 +280,36 @@ C     Skip over panels that do not have needed data.
       ENDIF
       IF (IPANEL .GT. N2) GO TO 95
 C
+      DV = OUTDV/FLOAT(OUTINRAT)
+      FACTOR = DV * 1.E04 * 2. * PI
 C     Keep a running total of radiances in each desired output group.
+      kk = 0
       DO 90 K = ISTART, NLIM
-         DO 80 I = 1, NANG
-            SRADD(IOUT,I) = SRADD(IOUT,I) + RADD(K,I)
-            SRADU(IOUT,I) = SRADU(IOUT,I) + RADU(K,I)
- 80      CONTINUE
+          kk = kk + 1
+          DO 80 I = 1, NANG
+              SRADD(IOUT,I) = SRADD(IOUT,I) + RADD(K,I)
+              SRADU(IOUT,I) = SRADU(IOUT,I) + RADU(K,I)
+  80      CONTINUE
+C Save surface downwelling fluxes on the grid the radiances come in on.
+         if (ilev .eq. nlev-1) then
+             IF (IQUAD .EQ. 1) THEN
+                 dfluxdv(kk,iout) = factor * (WTQD1 * RADD(k,1) + 
+     *               WTQD2 * RADD(k,2)+ WTQD3 * RADD(k,3))
+             ELSEIF (NANG .EQ. 1) THEN
+                 dfluxdv(kk,iout) = factor * GWGO1 * RADD(k,1)
+             ELSEIF (NANG .EQ. 2) THEN
+                 dfluxdv(kk,iout) = factor * (GWGD1 * RADD(k,1) + 
+     *               GWGD2 * RADD(k,2))
+             ELSEIF (NANG .EQ. 3) THEN
+                 dfluxdv(kk,iout) = factor * (GWGT1 * RADD(k,1) + 
+     *               GWGT2 * RADD(k,2)+ GWGT3 * RADD(k,3))
+             endif
+             if (kk .eq. outinrat) kk = 0
+         endif
 
          ICOUNT = ICOUNT + 1
          IF (ICOUNT .GE. OUTINRAT) THEN
-C           Current ouput group is complete.
+C           Current output group is complete.
             ICOUNT = 0
             IOUT = IOUT + 1
             IF (IOUT .GT. NOUT) GO TO 95
@@ -287,14 +318,13 @@ C           Current ouput group is complete.
 
  95   CONTINUE
 C     Current panel is complete.
-      ISTART = 1
+C     Do this if accumulating has already begun.
+      if (iout.ne.1 .or. icount.ne.0) ISTART = 1
       GO TO 30
 
  100  CONTINUE
 C     All needed radiances have been summed for this level.  Time to
 C     calculate fluxes.  The variable DV is the same as DVP above.
-      DV = OUTDV/FLOAT(OUTINRAT)
-      FACTOR = DV * 1.E04 * 2. * PI
       NDL = NLEV - ILEV
       DO 110 L = 1, NOUT
          IF (IQUAD .EQ. 1) THEN
@@ -319,22 +349,28 @@ C     calculate fluxes.  The variable DV is the same as DVP above.
             STOP ' ERROR IN NANG '
          ENDIF
  110  CONTINUE
-C
- 999  CONTINUE
+
 C     Return and do next level
       ILEV = ILEV + 1
       GO TO 10
 C
  1000 CONTINUE
-C     All incoming data have been processed.  For each output group,
-C     calculate surface flux (using surface temperature) by summing
-C     the Planck function computed at intervals of DV wavenumbers.
+C     All incoming data have been processed. 
+C     For each output group, calculate the surface upwelling flux  
+C     by summing over the interval the sum of 1) the Planck function 
+C     at the surface temperature times the emissivity and 2) the
+C     downwelling surface flux times the reflectivity.
       XKT = TBND/RADCN2
       DO 150 IOUT = 1, NOUT
          FSUM = 0.
          DO 160 K = 1, OUTINRAT
             RVBAR = BOUND(IOUT) + DV * (FLOAT(K-1) + 0.5)
-            FSUM = FSUM + BBFCN(RVBAR,XKT) * DV * 1.E04 * PI
+            call get_emiss(rvbar,iemis,sremis,v1em,dvem,nlimem,
+     *          emis_orig,emiss)
+            FSUM = FSUM + 
+     *          emiss * BBFCN(RVBAR,XKT) * DV * 1.E04 * PI +
+     *          (1.-emiss) * dfluxdv(k,iout)
+            ipoint = ipoint + 1
  160     CONTINUE
          FLXTTU(1,IOUT) = FSUM
  150  CONTINUE
@@ -394,7 +430,10 @@ C
  9956 FORMAT(1X,I3,4X,F5.2,7X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
  9957 FORMAT(1X,I3,3X,F5.1,8X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
  9958 FORMAT(1X,I3,2X,F5.0,9X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
- 900  FORMAT(2F10.2,3I5,F8.1,I5)
+C 900  FORMAT(2F10.2,3I5,F8.1,I5)
+ 900  FORMAT(2F10.2,3I5,F8.1,I5,I5,3E10.3)
+ 905  format(3e10.3,5x,i5)
+ 906  format(e10.3)
  910  FORMAT(2I5)
  920  FORMAT(' ')
  930  FORMAT('WAVENUMBER BAND: ',F8.2,' -',F8.2,' CM -1')
@@ -533,6 +572,29 @@ C
      *     CLIGHT/2.99792458E10/, AVOG/6.022045E23/
 C
       END
+C
+C------------------------------------------------------------------------------
+C
+      subroutine get_emiss(rvbar,iemiss,sremis,v1em,dvem,nlimem,
+     *    emis_orig,emiss)
+
+      dimension sremis(*),emis_orig(*)
+
+      if (iemiss .eq. 0) then
+          emiss = 1.0
+      elseif (iemiss .eq. 1) then
+          emiss = sremis(1)
+      elseif (iemiss .eq. 2) then
+          emiss = sremis(1) + sremis(2) * rvbar + sremis(3) * rvbar**2 
+      elseif (iemiss .eq. 3) then
+          vdiff = rvbar - v1em
+          ind = (vdiff/dvem) + 1
+          frac = vdiff/dvem - float(ind-1)
+          emiss = (1.-frac) * emis_orig(ind) + frac * emis_orig(ind+1)
+      endif
+
+      return
+      end
 C
 C------------------------------------------------------------------------------
 C
