@@ -9,11 +9,11 @@ $Date$
    
 RECORD 1
       
-          V1,   V2,    OUTINRAT,   NANG,   NLEV,   TBND,   IQUAD
+          V1,   V2,    OUTINRAT,   NANG,   NLEV,   TBND,   IQUAD, IEMIS, SREMIS
    
-         1-10  11-20    21-25      26-30   31-35   36-43   44-48
+         1-10  11-20    21-25      26-30   31-35   36-43   44-48  49-53   54-83
    
-        F10.2  F10.2      I5        I5      I5      F8.1     I5
+        F10.2  F10.2      I5        I5      I5      F8.1     I5     I5   3E10.3
    
 	V1		The beginning wavenumber of the first output group
 
@@ -36,6 +36,15 @@ RECORD 1
                            	0 - standard first-order quadrature
                            	1 - quadrature weights associated with
 					three angles used in RRTM
+	IEMIS	        Flag for specification of surface emissivity
+                                0 - emissivity is equal to 1
+                                1 - spectrally constant emissivity = sremis(1)
+                                2 - frequency dependent emissivity =
+                                  sremis(1) + sremis(2)*v + sremis(3)*v**2
+                                3 - frequency dependent emissivity values provided
+                                  in file "EMISSIVITY"
+	SREMIS	        Frequency dependent surface emissivity coefficients (see
+                                IEMIS description above)
 
 	Restrictions:  	V2 - V1 divided by OUTINRAT * (incoming DV) must be
 			an integer (equals the number of output groups).
@@ -52,3 +61,31 @@ RECORD 2
 	one of these records for each additional desired set of output groups.
 
 	NOTE:  V1 = -1. indicates the end of input.
+
+----------------------------------------------------------------------------------
+                    INPUT FILE (required if IEMIS=3): EMISSIVITY
+
+RECORD 1
+
+          V1,   V2,    DV,      NLIM
+   
+         1-10  11-20  21-30    36-40
+   
+        E10.3  E10.3  E10.3  5X   I5
+
+	V1		Beginning wavenumber in file
+	V2		Ending wavenumber in file
+	DV		Spectral spacing of values in file
+	NLIM		Number of values in file (must be less than or equal to 4040)
+
+
+RECORD 2
+
+	EMISS
+	
+	1-10
+
+	E10.3
+
+
+	EMISS		Frequency dependent surface emissivity values

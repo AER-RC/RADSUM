@@ -5,6 +5,14 @@ $Date$
 NOTE:
 ** CVS rtags can't accept "." in strings, substitute "_"
 
+March 2017
+
+	Release_2_7
+
+	* Added code to handle surface emissivity
+
+        * Fixed bug when needed LBLRTM output is in more than one panel
+
 January 2011
 
 	Release_2_6
