@@ -1,0 +1,13 @@
+#!/bin/tcsh
+
+# The user needs to link lblrtm, radsum and TAPE3 to versions on the local system
+\rm OUTPUT_RADSUM
+
+\cp tape5.lbl.sample TAPE5
+echo Running LBLRTM
+lblrtm
+\mv TAPE6 tape6.lbl.sample
+echo Running RADSUM
+radsum
+
+\rm ODdef* TAPE3? TAPE6? TAPE?? TAPE7 TAPE9 TAPE5
