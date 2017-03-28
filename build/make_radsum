@@ -17,7 +17,7 @@ include makefile.common
 # change those two variables from what is provided here, no need to set this variable.
 
 PRODUCT = radsum
-VERSION = v2.6
+VERSION = v2.7
 
 # Set name of RADSUM executable.  
 OUTPUT = ${PRODUCT}_$(VERSION)_$(PLTFRM)_$(FC_TYPE)_$(P_TYPE)
