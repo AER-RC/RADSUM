@@ -246,6 +246,7 @@ C        processed.  Also find which  panels these points are in.
          ISTART = NDVP1
          IOUT = 1
          ICOUNT = 0
+         kk = 0
 C
 C        Check consistency of input.  NOUT is number of output groups.
          OUT = (V2 - V1)/(FLOAT(OUTINRAT)*DVP)
@@ -283,7 +284,7 @@ C
       DV = OUTDV/FLOAT(OUTINRAT)
       FACTOR = DV * 1.E04 * 2. * PI
 C     Keep a running total of radiances in each desired output group.
-      kk = 0
+c      if(ilev.eq.nlev-1)write(*,*)ipanel,ilev,istart,nlim
       DO 90 K = ISTART, NLIM
           kk = kk + 1
           DO 80 I = 1, NANG
@@ -312,6 +313,7 @@ C Save surface downwelling fluxes on the grid the radiances come in on.
 C           Current output group is complete.
             ICOUNT = 0
             IOUT = IOUT + 1
+            kk = 0
             IF (IOUT .GT. NOUT) GO TO 95
          ENDIF
  90   CONTINUE
@@ -370,6 +372,8 @@ C     downwelling surface flux times the reflectivity.
             FSUM = FSUM + 
      *          emiss * BBFCN(RVBAR,XKT) * DV * 1.E04 * PI +
      *          (1.-emiss) * dfluxdv(k,iout)
+            write(*,*)rvbar,BBFCN(RVBAR,XKT)*DV*1.E04*PI,
+     *    dfluxdv(k,iout),fsum
             ipoint = ipoint + 1
  160     CONTINUE
          FLXTTU(1,IOUT) = FSUM
@@ -431,7 +435,7 @@ C
  9957 FORMAT(1X,I3,3X,F5.1,8X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
  9958 FORMAT(1X,I3,2X,F5.0,9X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
 C 900  FORMAT(2F10.2,3I5,F8.1,I5)
- 900  FORMAT(2F10.2,3I5,F8.1,I5,I5,3E10.3)
+ 900  FORMAT(2F10.2,3I5,F8.2,I5,I5,3E10.3)
  905  format(3e10.3,5x,i5)
  906  format(e10.3)
  910  FORMAT(2I5)
