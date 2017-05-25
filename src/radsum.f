@@ -159,7 +159,8 @@ C******************************************************************************
 C 
       NFHDRF = NWDL(IWDF,LSTWDF)
       NPHDRF = NWDL(IWDP,LSTWDP)
-      PI = 2.*ASIN(1.)
+C     PI = 2.*ASIN(1.)
+      PI = 3.1415926535898
       RADCN1 = 2.*PLANCK*CLIGHT*CLIGHT*1.E-07
       RADCN2 = PLANCK*CLIGHT/BOLTZ
       EPS = 1.E-4
@@ -372,8 +373,8 @@ C     downwelling surface flux times the reflectivity.
             FSUM = FSUM + 
      *          emiss * BBFCN(RVBAR,XKT) * DV * 1.E04 * PI +
      *          (1.-emiss) * dfluxdv(k,iout)
-            write(*,*)rvbar,BBFCN(RVBAR,XKT)*DV*1.E04*PI,
-     *    dfluxdv(k,iout),fsum
+c           write(*,*)rvbar,BBFCN(RVBAR,XKT)*DV*1.E04*PI,
+c    *    dfluxdv(k,iout),fsum
             ipoint = ipoint + 1
  160     CONTINUE
          FLXTTU(1,IOUT) = FSUM
@@ -572,8 +573,8 @@ C
       BLOCK DATA
 C
       COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2
-      DATA PLANCK/6.626176E-27/, BOLTZ/1.380662E-16/,
-     *     CLIGHT/2.99792458E10/, AVOG/6.022045E23/
+      DATA PLANCK/6.62606876E-27/, BOLTZ/1.3806503E-16/,
+     *     CLIGHT/2.99792458E+10/, AVOG/6.02214199E+23/
 C
       END
 C
