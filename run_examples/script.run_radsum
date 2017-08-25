@@ -11,3 +11,4 @@ echo Running RADSUM
 radsum
 
 \rm ODdef* TAPE3? TAPE6? TAPE?? TAPE7 TAPE9 TAPE5
+\rm fort.601 fort.602 fort.603
