@@ -1,6 +1,11 @@
 
 Calculation of fluxes and heating rates from LBLRTM output radiances
 
+IMPORTANT! In order for the example to run smoothly, the user must also download
+the LBLRTM, LNFL and AER line files packages. Each package should be installed at
+the same directory level as RADSUM, i.e., the user should have a directory
+containing RADSUM, LBLRTM, LNFL and the line files (aer_v3.6 currently).
+
 LBLRTM 
 Input file: TAPE5.sample (profile, scan parameters, etc.)
 Output files: ODdeflt_01, etc. (optical depths by layer)
