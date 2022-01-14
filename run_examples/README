@@ -34,7 +34,8 @@ slow for profiles with many layers). It is important that the angles
 chosen for the flux LBL runs match the quadrature angles specified in
 RADSUM, either Gaussian first order or the quadrature used by RRTM. 
 Furthermore the emissivity values chosen for LBLRTM must also be used 
-for RADSUM.
+for RADSUM. The upwelling calculations assumes Lambertian reflection of the 
+downward flux. The same assumption is made in RADSUM.
 
 
 RADSUM steps:
