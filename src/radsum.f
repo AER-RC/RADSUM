@@ -1,6 +1,6 @@
 C     path:      %P%
-C     revision:  $Revision$
-C     created:   $Date$  
+C     revision:  $Revision: 31163 $
+C     created:   $Date: 2017-03-21 17:23:54 -0400 (Tue, 21 Mar 2017) $  
 C     presently: %H%  %T%
 C
 C  --------------------------------------------------------------------------
@@ -87,7 +87,7 @@ C              - THE HEATING RATE FOR EACH LAYER, COMPUTED FROM NET FLUX,
 C                INDEXED AND WRITTEN WITH THE BOTTOM LEVEL OF THE LAYER
 C******************************************************************************
 C 
-      PARAMETER (MXFSC=500,LIMMAX=2500,MXANGL=3)
+      PARAMETER (MXFSC=500,LIMMAX=10000,MXANGL=3)
 C                                                                         A02920
       IMPLICIT REAL*8           (V)                                     ! A02930
 C
@@ -128,7 +128,7 @@ C
 C 
 C     Assign CVS version number to module
 C
-      HVRRSM = '$Revision$' 
+      HVRRSM = '$Revision: 31163 $' 
 C
 C     Here are the weights for the first-order Gaussian quadrature:
 C
@@ -159,8 +159,7 @@ C******************************************************************************
 C 
       NFHDRF = NWDL(IWDF,LSTWDF)
       NPHDRF = NWDL(IWDP,LSTWDP)
-C     PI = 2.*ASIN(1.)
-      PI = 3.1415926535898
+      PI = 2.*ASIN(1.)
       RADCN1 = 2.*PLANCK*CLIGHT*CLIGHT*1.E-07
       RADCN2 = PLANCK*CLIGHT/BOLTZ
       EPS = 1.E-4
@@ -169,7 +168,6 @@ C     Read input control file.
       OPEN(UNIT=44,FILE='IN_RADSUM')
       READ(44,900) V1, V2, OUTINRAT, NANG, NLEV, TBND, IQUAD, iemis, 
      *                 sremis
-      !print *, sremis
       IF (IQUAD .EQ. 1) NANG = 3
       if (iemis .eq. 3) then
           open (unit=45, file='EMISSIVITY')
@@ -203,6 +201,7 @@ C     Read file headers.
          CALL BUFIN (KFILU(I), KEOF, FILHDR, NFHDRF)
   20  CONTINUE
 C
+
 C     Set layer boundary pressure.
       PRESLV(ILEV) = PZL
 C
@@ -247,7 +246,6 @@ C        processed.  Also find which  panels these points are in.
          ISTART = NDVP1
          IOUT = 1
          ICOUNT = 0
-         kk = 0
 C
 C        Check consistency of input.  NOUT is number of output groups.
          OUT = (V2 - V1)/(FLOAT(OUTINRAT)*DVP)
@@ -285,7 +283,7 @@ C
       DV = OUTDV/FLOAT(OUTINRAT)
       FACTOR = DV * 1.E04 * 2. * PI
 C     Keep a running total of radiances in each desired output group.
-c      if(ilev.eq.nlev-1)write(*,*)ipanel,ilev,istart,nlim
+      kk = 0
       DO 90 K = ISTART, NLIM
           kk = kk + 1
           DO 80 I = 1, NANG
@@ -314,7 +312,6 @@ C Save surface downwelling fluxes on the grid the radiances come in on.
 C           Current output group is complete.
             ICOUNT = 0
             IOUT = IOUT + 1
-            kk = 0
             IF (IOUT .GT. NOUT) GO TO 95
          ENDIF
  90   CONTINUE
@@ -373,8 +370,6 @@ C     downwelling surface flux times the reflectivity.
             FSUM = FSUM + 
      *          emiss * BBFCN(RVBAR,XKT) * DV * 1.E04 * PI +
      *          (1.-emiss) * dfluxdv(k,iout)
-c           write(*,*)rvbar,BBFCN(RVBAR,XKT)*DV*1.E04*PI,
-c    *    dfluxdv(k,iout),fsum
             ipoint = ipoint + 1
  160     CONTINUE
          FLXTTU(1,IOUT) = FSUM
@@ -436,7 +431,7 @@ C
  9957 FORMAT(1X,I3,3X,F5.1,8X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
  9958 FORMAT(1X,I3,2X,F5.0,9X,1P,E13.6,2X,E13.6,2X,E13.6,3X,E13.6) 
 C 900  FORMAT(2F10.2,3I5,F8.1,I5)
- 900  FORMAT(2F10.2,3I5,F8.2,I5,I5,3E10.3)
+ 900  FORMAT(2F10.2,3I5,F8.1,I5,I5,3E10.3)
  905  format(3e10.3,5x,i5)
  906  format(e10.3)
  910  FORMAT(2I5)
@@ -573,8 +568,8 @@ C
       BLOCK DATA
 C
       COMMON /CONSTS/ PI,PLANCK,BOLTZ,CLIGHT,AVOG,RADCN1,RADCN2
-      DATA PLANCK/6.62606876E-27/, BOLTZ/1.3806503E-16/,
-     *     CLIGHT/2.99792458E+10/, AVOG/6.02214199E+23/
+      DATA PLANCK/6.626176E-27/, BOLTZ/1.380662E-16/,
+     *     CLIGHT/2.99792458E10/, AVOG/6.022045E23/
 C
       END
 C
